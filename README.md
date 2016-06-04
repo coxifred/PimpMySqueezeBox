@@ -1,12 +1,7 @@
 # PimpMySqueezeBox
-Pimp Squeezebox user interface
+
+Please read https://github.com/coxifred/PimpMySqueezeBox/wiki
 
 
-Caroussel's selection for SqueezeBoxServer
-
-More infos 
-Try here :
-
-https://cdn.rawgit.com/coxifred/PimpMySqueezeBox/master/Demo/index.html
 
 
