@@ -3,6 +3,10 @@ Pimp Squeezebox user interface
 
 
 Caroussel's selection for SqueezeBoxServer
-Try here.
+
+More infos 
+Try here :
+
+https://cdn.rawgit.com/coxifred/PimpMySqueezeBox/master/Demo/index.html
 
 
