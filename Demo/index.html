@@ -1,0 +1,279 @@
+<html>
+	<head>
+	 <meta charset="utf-8" />
+   	
+		<LINK rel="stylesheet" type="text/css" href="css/squeezebox.css">
+		<LINK rel="stylesheet" type="text/css" href="css/carousel.css">
+		<script src="javascript/utils.js"></script>
+		<script src="javascript/carousel.js"></script>
+		<script src="javascript/jquery.js"></script>
+		<script src="javascript/jquerymobile.js"></script>
+		<script src="javascript/event-move.js"></script>
+		<script src="javascript/swipe-event.js"></script>
+        <!-- Start testing only uncomment next line -->
+		<script src="javascript/mock.js"></script>
+		<!-- End testing only uncomment next line -->
+		
+			<script>
+			$(document).ready(function(){
+				var currentIndex=0;
+				var letters = ["0","1","2","3","4","5","6","7","8","9","A","B","C","D","E","F","G","H","I","J","K","L","M","N","O","P","Q","R","S","T","U","V","W","X","Y","Z","FAV"];
+				//console.log( letters.length + " elements in letters");
+				var currentLetterVar="0";
+				
+				var slides = jQuery('.swipe'),
+				i = 0;
+				slides.on('swipeleft', function(e) {
+					velocity=Math.round(Math.abs(e.distX / 100));
+					//console.log("velocityX: " + velocity); 
+					move(1,velocity);
+					updateCurrentLetter(1,velocity);
+				  slides.eq(i + 1).addClass('active');
+				}).on('swiperight', function(e) {
+					velocity=Math.round(Math.abs(e.distX / 100));
+					//console.log("velocityX: " + (e.velocityX* 10000));
+					move(-1,velocity);
+					updateCurrentLetter(-1,-velocity);
+					
+				  slides.eq(i - 1).addClass('active');
+				});
+				
+				function createSlide2()
+						{
+				
+				var slides2 = jQuery('.swipe2'),
+				i = 0;
+				slides2.on('swipeleft', function(e) {
+					velocity=Math.round(Math.abs(e.distX / 100));
+					//console.log("move2 velocityX: " + velocity); 
+					move2(1,velocity);
+				  slides2.eq(i + 1).addClass('active');
+				}).on('swiperight', function(e) {
+					velocity=Math.round(Math.abs(e.distX / 100));
+					//console.log("move2 velocityX: " + (e.velocityX* 10000));
+					move2(-1,velocity);
+					
+				  slides2.eq(i - 1).addClass('active');
+				});
+// 				alert(slides2);
+						}
+				
+				function trim (myString)
+				{
+				return myString.replace(/^\s+/g,'').replace(/\s+$/g,'');
+				} 
+						
+				function getValueFromUrl(theUrl,asyncMode) {
+					var retour; 
+					var request = $
+							.ajax({
+								url : theUrl,
+								type : "POST",
+								data : {},
+								async : asyncMode,
+								dataType : "html",
+									error:function(xhr, status, errorThrown) {
+									//alert("ERROR ! " + errorThrown+'\n'+status+'\n'+xhr.statusText);
+							        } 
+							});
+							
+					request
+							.done(function(msg) {
+								retour = trim(msg)
+								
+							});
+							return retour;
+					}	
+				
+				function updateCurrentLetter(indice,velocity)
+				{
+					//console.log("Updating currentIndex " + currentIndex + " + " + velocity);
+					currentIndex=currentIndex + velocity;
+					if ( currentIndex > letters.length)
+						{
+						//console.log("newindex over array");
+						currentIndex=(currentIndex - letters.length);
+						} else if ( currentIndex < 0)
+						{
+							//console.log("newindex under array");
+							currentIndex=letters.length + currentIndex;
+						} 
+					//console.log("Current letter = " + letters[currentIndex]);
+					
+					$("#currentLetter").html(letters[currentIndex]);
+					currentLetterVar=letters[currentIndex];
+					async(asynchUpdate,whenDone);
+				
+				}
+				
+				function whenDone()
+				{
+					
+				}
+				
+				function async(fn, callback) {
+				    setTimeout(function() {
+				        fn();
+				        callback();
+				    }, 0);
+				}
+				
+				function asynchUpdate()
+				{
+					var deferred = $.Deferred();
+					var response="";
+					if ( mock == "true" )
+						{
+							response=mockData[currentIndex];
+						}else
+							{
+							response=getValueFromUrl("SqueezeBoxAction!getArtist?firstLetter=" + letters[currentIndex] , false);
+							//console.log("mockData[" + currentIndex + "]= '" + response + "';");
+							}
+					updateSecondCaroussel(response);
+				}
+				 
+				function updateSecondCaroussel(responseJson)
+				{
+					//alert(responseJson);
+					var json = JSON.parse(responseJson);
+					
+					$("#carousel2").html("");
+					var html="";
+					var count=json.length;
+					for ( i=0;i<json.length;i++)
+						{
+						//console.log(json[i].name);
+						if ( mock == "true" )
+							{
+							html+="<figure class=\"unselectable swipe2\" ><div class=\"unselectable swipe2\"><img class=\"unselectable swipe2 album\" id=" + json[i].artwork_track_id +" height=200px width=200px src=music/" + json[i].artwork_track_id + ".jpg><div class=artistname id=\"" + json[i].name + "\">" +json[i].name + "</div></figure>";
+							}else
+								{
+								html+="<figure class=\"unselectable swipe2\" ><div class=\"unselectable swipe2\"><img class=\"unselectable swipe2 album\" id=" + json[i].artwork_track_id +" height=200px width=200px src=http://192.168.1.28:9002/music/" + json[i].artwork_track_id + "/cover.jpg><div class=artistname id=\"" + json[i].name + "\">" +json[i].name + "</div></figure>";				
+								}
+						
+						//console.log ("http://192.168.1.28:9002/music/" + json[i].artwork_track_id + "/cover.jpg");
+						}
+					//console.log(json.length);
+					
+					if (json.length < 5)
+						{
+						count=json.length + 6;
+						for ( i=0;i<6;i++)
+						{
+						html+="<figure class=\"unselectable swipe2\" ><div class=\"unselectable swipe2\"><img class=\"unselectable swipe2\" height=200px width=200px src=images/blank.png></div></figure>";
+						}
+						}
+					$("#carousel2").html(html);
+					// Rebuild Caroussel
+					buildCaroussel2(count);
+					createSlide2();
+					
+				}
+// 				 $(".unselectable").on("click",function(){
+// 					 var id = $(this).attr('id');
+// 					 var content=$(this).html();
+// 					 alert("Click on " + content);
+// 					  });  
+// 				 $(".swipe").on("swipeleft",function(){
+// 					 move(1);
+// 					  });
+				 
+// 				 $(".swipe2").on("swiperight",function(){
+// 					 move2(-1);
+// 					  });  
+// 				 $(".swipe2").on("swipeleft",function(){
+// 					 move2(1);
+// 					  });
+			});
+			</script>
+		
+	
+	<style >
+
+   
+
+  </style>
+	
+	
+	
+	</head>
+	<body>
+		
+		<div id=squeezeBackground class=squeezeBackground>
+		<div id=param ><img class="paramIcon unselectable" src=images/param.png></div>
+		<div id=logoSqueeze class="unselectable" style=position:fixed;left:10px;top:10px><img height=32px width=32px src=images/squeezebox.png></div>
+		<div id=titleSqueeze style=position:fixed;left:50px;top:1px class="titleSqueeze unselectable">PimpMySqueezeBox</div>
+		<div id=titleGit style=position:fixed;left:50px;top:50px class="titleGit unselectable"><a href=https://github.com/coxifred/PimpMySqueezeBox>https://github.com/coxifred/PimpMySqueezeBox</a></div>
+		</div>
+		
+<%-- 	<section style=display:none id="options"> --%>
+<!--       <p id="navigation"> -->
+<!-- 	      <button id="previous" data-increment="-1">Previous</button> -->
+<!-- 	      <button id="next" data-increment="1">Next</button> -->
+<!-- 	  </p> -->
+<!-- 	  <p> -->
+<!--     	  <button id="toggle-axis">Toggle Carousel Axis</button> -->
+<!--       </p> -->
+<%--   	</section> --%>
+  
+  
+	<section class="container unselectable" style=position:fixed;top:15%;left:45%>
+	  <div id="carousel" class="unselectable">
+      <figure class="swipe"><div class=unselectable>0</div></figure>
+      <figure class="swipe"><div class=unselectable>1</div></figure>
+      <figure class="swipe"><div class=unselectable>2</div></figure>
+      <figure class="swipe"><div class=unselectable>3</div></figure>
+      <figure class="swipe"><div class=unselectable>4</div></figure>
+      <figure class="swipe"><div class=unselectable>5</div></figure>
+      <figure class="swipe"><div class=unselectable>6</div></figure>
+      <figure class="swipe"><div class=unselectable>7</div></figure>
+      <figure class="swipe"><div class=unselectable>8</div></figure>
+      <figure class="swipe"><div class=unselectable>9</div></figure>
+      <figure class="swipe"><div class=unselectable>A</div></figure>
+      <figure class="swipe"><div class=unselectable>B</div></figure>
+      <figure class="swipe"><div class=unselectable>C</div></figure>
+      <figure class="swipe"><div class=unselectable>D</div></figure>
+      <figure class="swipe"><div class=unselectable>E</div></figure>
+      <figure class="swipe"><div class=unselectable>F</div></figure>
+      <figure class="swipe"><div class=unselectable>G</div></figure>
+      <figure class="swipe"><div class=unselectable>H</div></figure>
+      <figure class="swipe"><div class=unselectable>I</div></figure>
+      <figure class="swipe"><div class=unselectable>J</div></figure>
+      <figure class="swipe"><div class=unselectable>K</div></figure>
+      <figure class="swipe"><div class=unselectable>L</div></figure>
+      <figure class="swipe"><div class=unselectable>M</div></figure>
+      <figure class="swipe"><div class=unselectable>N</div></figure>
+      <figure class="swipe"><div class=unselectable>O</div></figure>
+      <figure class="swipe"><div class=unselectable>P</div></figure>
+      <figure class="swipe"><div class=unselectable>Q</div></figure>
+      <figure class="swipe"><div class=unselectable>R</div></figure>
+      <figure class="swipe"><div class=unselectable>S</div></figure>
+      <figure class="swipe"><div class=unselectable>T</div></figure>
+      <figure class="swipe"><div class=unselectable>U</div></figure>
+      <figure class="swipe"><div class=unselectable>V</div></figure>
+      <figure class="swipe"><div class=unselectable>W</div></figure>
+      <figure class="swipe"><div class=unselectable>X</div></figure>
+      <figure class="swipe"><div class=unselectable>Y</div></figure>
+      <figure class="swipe"><div class=unselectable>Z</div></figure>
+      <figure class="swipe"><div class=unselectable><img height=120px width=120px src=images/favorites.png></div></figure>
+      </div>
+  </section>
+		
+		
+  <section class="container2 unselectable"  style=position:fixed;top:35%;left:45%>
+	  <div id="carousel2" class=unselectable>
+     
+      </div>
+  </section>
+
+
+	<div id=debugStuff>
+		<div id=currentLetter></div>
+	</div>
+		
+	</body>
+</html>
+
+
+
